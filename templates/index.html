@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Melodi DNA — Melodik Benzerlik Analizi</title>
+<style>
+:root{
+  --bg:#f7f5ef; --card:#fffdf9; --ink:#25231f; --muted:#77736b;
+  --line:#e9e4da; --accent:#6c63ff; --accent2:#8b84ff;
+  --good:#3e9b72; --shadow:0 14px 40px rgba(42,35,20,.07);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,sans-serif}
+.container{width:min(1100px,92%);margin:auto}
+header{padding:28px 0 18px;display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:800;letter-spacing:-.04em;font-size:24px}
+.badge{padding:8px 12px;border:1px solid var(--line);border-radius:999px;background:#fffaf2;color:var(--muted);font-size:12px}
+.hero{padding:58px 0 36px;text-align:center}
+.hero h1{font-size:clamp(38px,7vw,70px);letter-spacing:-.06em;margin:0 0 16px}
+.hero p{max-width:700px;margin:auto;color:var(--muted);font-size:17px;line-height:1.7}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:26px;padding:24px;box-shadow:var(--shadow)}
+.upload{min-height:240px;display:flex;flex-direction:column;justify-content:space-between}
+.kicker{font-size:12px;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);font-weight:800}
+h2{margin:8px 0 5px;font-size:23px}
+.desc{color:var(--muted);font-size:14px}
+.drop{margin-top:20px;border:1.5px dashed #d8d1c4;border-radius:20px;padding:25px;text-align:center;cursor:pointer;background:#fcfaf5;transition:.2s}
+.drop:hover{border-color:var(--accent);transform:translateY(-1px)}
+.drop input{display:none}
+.file-name{margin-top:12px;font-size:13px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.analyze-wrap{display:flex;justify-content:center;margin:22px 0 45px}
+button{border:0;border-radius:999px;padding:15px 25px;background:var(--accent);color:white;font-size:15px;font-weight:800;cursor:pointer;box-shadow:0 9px 22px rgba(108,99,255,.22)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.status{text-align:center;color:var(--muted);font-size:14px;margin-top:-30px;margin-bottom:30px;min-height:20px}
+.hidden{display:none}
+.result-head{display:flex;justify-content:space-between;gap:20px;align-items:center}
+.score{font-size:70px;font-weight:900;letter-spacing:-.07em}
+.score small{font-size:18px;color:var(--muted);letter-spacing:0}
+.verdict{padding:12px 15px;border-radius:16px;background:#f2eee5;font-weight:800}
+.bars{display:grid;gap:15px;margin-top:25px}
+.row{display:grid;grid-template-columns:150px 1fr 55px;gap:12px;align-items:center;font-size:14px}
+.bar{height:11px;background:#eee9df;border-radius:999px;overflow:hidden}
+.fill{height:100%;width:0;background:var(--accent);border-radius:999px;transition:1s ease}
+.chart-card{margin-top:18px}
+canvas{width:100%;height:260px;display:block}
+.note{font-size:12px;color:var(--muted);line-height:1.6;margin-top:18px}
+footer{padding:55px 0 35px;color:var(--muted);font-size:12px;text-align:center}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.hero{padding-top:35px}.result-head{align-items:flex-start}.score{font-size:56px}.row{grid-template-columns:120px 1fr 48px}}
+</style>
+</head>
+<body>
+<div class="container">
+<header>
+  <div class="logo">Melodi DNA</div>
+  <div class="badge">Matematiksel melodi analizi</div>
+</header>
+
+<section class="hero">
+  <h1>İki melodinin DNA'sını karşılaştır.</h1>
+  <p>Melodilerin nota aralıklarını, melodik konturunu, ritmik yapısını ve tekrar eden motiflerini ölçerek 0–100 arasında bir benzerlik skoru üret.</p>
+</section>
+
+<section class="grid">
+  <div class="card upload">
+    <div>
+      <div class="kicker">Melodi A</div>
+      <h2>İlk ses dosyası</h2>
+      <div class="desc">Tercihen temiz, tek sesli bir melodi.</div>
+    </div>
+    <label class="drop">
+      <input id="file1" type="file" accept="audio/*">
+      <strong>Ses dosyası seç</strong><br>
+      <span class="desc">WAV · MP3 · FLAC · OGG · M4A</span>
+      <div id="name1" class="file-name">Henüz dosya seçilmedi</div>
+    </label>
+  </div>
+  <div class="card upload">
+    <div>
+      <div class="kicker">Melodi B</div>
+      <h2>İkinci ses dosyası</h2>
+      <div class="desc">Aynı şekilde analiz edilecek ikinci melodi.</div>
+    </div>
+    <label class="drop">
+      <input id="file2" type="file" accept="audio/*">
+      <strong>Ses dosyası seç</strong><br>
+      <span class="desc">WAV · MP3 · FLAC · OGG · M4A</span>
+      <div id="name2" class="file-name">Henüz dosya seçilmedi</div>
+    </label>
+  </div>
+</section>
+
+<div class="analyze-wrap">
+  <button id="analyze" disabled>Melodi DNA'yı analiz et</button>
+</div>
+<div id="status" class="status"></div>
+
+<section id="results" class="hidden">
+  <div class="card">
+    <div class="result-head">
+      <div>
+        <div class="kicker">Genel benzerlik</div>
+        <div class="score"><span id="score">0</span><small>/ 100</small></div>
+      </div>
+      <div id="verdict" class="verdict">Analiz tamamlandı</div>
+    </div>
+    <div class="bars">
+      <div class="row"><span>Nota aralığı</span><div class="bar"><div id="b1" class="fill"></div></div><strong id="v1">0</strong></div>
+      <div class="row"><span>Melodik kontur</span><div class="bar"><div id="b2" class="fill"></div></div><strong id="v2">0</strong></div>
+      <div class="row"><span>Ritmik yapı</span><div class="bar"><div id="b3" class="fill"></div></div><strong id="v3">0</strong></div>
+      <div class="row"><span>Motif benzerliği</span><div class="bar"><div id="b4" class="fill"></div></div><strong id="v4">0</strong></div>
+    </div>
+    <p class="note">Ağırlıklar: nota aralığı %35, melodik kontur %25, ritmik yapı %20, motif %20. Nota aralığı ve motif karşılaştırmaları transpozisyona karşı daha dayanıklı olacak şekilde modellenmiştir.</p>
+  </div>
+
+  <div class="card chart-card">
+    <div class="kicker">Melodik yapı</div>
+    <h2>Göreli perde eğrileri</h2>
+    <canvas id="chart" width="1000" height="300"></canvas>
+    <p class="note">Grafik, iki melodinin mutlak tonunu değil, kendi içindeki perde hareketini gösterir. Bu yüzden aynı melodi farklı bir tona taşındığında yapı büyük ölçüde korunabilir.</p>
+  </div>
+</section>
+
+<footer>Melodi DNA · Matematik / Algoritma Tasarımı projesi</footer>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const f1=$("file1"), f2=$("file2"), btn=$("analyze");
+function refresh(){
+  $("name1").textContent=f1.files[0]?.name || "Henüz dosya seçilmedi";
+  $("name2").textContent=f2.files[0]?.name || "Henüz dosya seçilmedi";
+  btn.disabled=!(f1.files[0]&&f2.files[0]);
+}
+f1.onchange=refresh; f2.onchange=refresh;
+
+function drawChart(a,b){
+  const c=$("chart"), ctx=c.getContext("2d");
+  const w=c.width=c.clientWidth*2, h=c.height=c.clientHeight*2;
+  ctx.clearRect(0,0,w,h); ctx.scale(2,2);
+  const W=c.clientWidth,H=c.clientHeight;
+  const pad=25;
+  ctx.strokeStyle="#ded8cc"; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.moveTo(pad,H/2); ctx.lineTo(W-pad,H/2); ctx.stroke();
+  function line(data){
+    const min=Math.min(...data,-1), max=Math.max(...data,1), span=max-min||1;
+    ctx.beginPath();
+    data.forEach((v,i)=>{
+      const x=pad+i*(W-2*pad)/Math.max(1,data.length-1);
+      const y=H-pad-(v-min)/span*(H-2*pad);
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }); ctx.stroke();
+  }
+  ctx.lineWidth=3; ctx.strokeStyle="#6c63ff"; line(a);
+  ctx.lineWidth=2; ctx.strokeStyle="#8d877c"; line(b);
+  ctx.fillStyle="#77736b"; ctx.font="12px system-ui"; ctx.fillText("Melodi A",pad,16); ctx.fillText("Melodi B",pad+80,16);
+}
+
+btn.onclick=async()=>{
+  btn.disabled=true; $("status").textContent="Melodiler analiz ediliyor…";
+  $("results").classList.add("hidden");
+  const fd=new FormData(); fd.append("file1",f1.files[0]); fd.append("file2",f2.files[0]);
+  try{
+    const r=await fetch("/analyze",{method:"POST",body:fd});
+    const data=await r.json();
+    if(!r.ok) throw new Error(data.error || "Analiz başarısız.");
+    $("score").textContent=data.score;
+    const c=data.components;
+    [["b1","v1",c.interval],["b2","v2",c.contour],["b3","v3",c.rhythm],["b4","v4",c.motif]].forEach(([b,v,n])=>{
+      $(b).style.width=n+"%"; $(v).textContent=n;
+    });
+    const s=data.score;
+    $("verdict").textContent=s>=85?"Çok yüksek benzerlik":s>=70?"Yüksek benzerlik":s>=50?"Orta benzerlik":s>=30?"Düşük benzerlik":"Çok düşük benzerlik";
+    drawChart(data.melody1,data.melody2);
+    $("results").classList.remove("hidden");
+    $("status").textContent="";
+    $("results").scrollIntoView({behavior:"smooth",block:"start"});
+  }catch(e){
+    $("status").textContent=e.message;
+  }finally{btn.disabled=!(f1.files[0]&&f2.files[0]);}
+};
+window.addEventListener("resize",()=>{});
+</script>
+</body>
+</html>
